@@ -25,7 +25,7 @@ function Login() {
           <span className="text-xl font-bold text-sidebar-accent-foreground">Synthex Kitchen</span>
         </div>
         <div>
-          <h2 className="max-w-md text-4xl font-bold leading-tight text-sidebar-accent-foreground">Del costal de harina a la pizza vendida, todo bajo control.</h2>
+          <h2 className="max-w-md text-4xl font-bold leading-tight text-sidebar-accent-foreground">Del costal de harina al plato vendido, todo bajo control.</h2>
           <div className="mt-8 space-y-3 text-sm">
             {[[Package, "Inventario con alertas de reposición"], [Factory, "Órdenes de producción por receta"], [ShoppingCart, "Ventas que descuentan insumos automáticamente"]].map(([I, t]: any) => (
               <div key={t} className="flex items-center gap-3"><I className="h-4 w-4 text-sidebar-primary" />{t}</div>
