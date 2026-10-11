@@ -52,13 +52,7 @@ function Inventario() {
     <>
       <PageHeader title="Inventario" description="Materias primas, preparaciones y productos de venta" actions={<Button onClick={() => setEdit({ ...blank })}><Plus className="h-4 w-4" />Nuevo producto</Button>} />
       <Panel>
-        <div className="flex flex-wrap gap-2 border-b p-3">
-          <div className="relative min-w-56 flex-1"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="pl-8" placeholder="Buscar por nombre o SKU" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-          <Select className="w-44" value={cat} onChange={setCat}><option value="">Todas las categorías</option>{Object.entries(CATEGORY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>
-          <Select className="w-36" value={st} onChange={setSt}><option value="">Todos los estados</option><option value="activo">Activos</option><option value="inactivo">Inactivos</option></Select>
-          <Select className="w-40" value={lvl} onChange={setLvl}><option value="">Todo nivel de stock</option><option value="optimo">Óptimo</option><option value="bajo">Stock bajo</option><option value="agotado">Agotado</option></Select>
-        </div>
-        <DataTable head={["Producto", "SKU", "Categoría", "Stock", "Mínimo", "Costo unit.", "Precio venta", "Estado", ""]} empty={!rows.length}>
+        <DataTable head={head} empty={!rows.length}>
           {rows.map((p) => (
             <tr key={p.id} className={p.active ? "" : "opacity-60"}>
               <td className="font-medium">{p.name}</td>

@@ -59,11 +59,7 @@ function Produccion() {
     <>
       <PageHeader title="Producción" description="Transforma materias primas en preparaciones" actions={<Button onClick={() => setEdit({ recipeId: "", qty: 1, date: today(), status: "borrador" })}><Plus className="h-4 w-4" />Nueva orden de producción</Button>} />
       <Panel>
-        <div className="flex flex-wrap gap-2 border-b p-3">
-          <div className="relative min-w-56 flex-1"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="pl-8" placeholder="Buscar por código o producto" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-          <Select className="w-44" value={st} onChange={setSt}><option value="">Todos los estados</option>{Object.entries(ORDER_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>
-        </div>
-        <DataTable head={["Código", "Fecha", "Producto", "Cantidad", "Costo estimado", "Estado", ""]} empty={!rows.length}>
+        <DataTable head={head} empty={!rows.length}>
           {rows.map((o) => {
             const p = prodOf(o);
             return (

@@ -39,12 +39,7 @@ function Ventas() {
     <>
       <PageHeader title="Ventas" description="Pizzas vendidas y consumo automático de componentes" actions={<Button onClick={() => setEdit({ items: [], method: "Efectivo", date: nowLocal() })}><Plus className="h-4 w-4" />Nueva venta</Button>} />
       <Panel>
-        <div className="flex flex-wrap gap-2 border-b p-3">
-          <div className="relative min-w-56 flex-1"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="pl-8" placeholder="Buscar por número (V-00001)" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-          <Input type="date" className="w-40" value={date} onChange={(e) => setDate(e.target.value)} />
-          <Select className="w-40" value={st} onChange={setSt}><option value="">Todos los estados</option><option value="borrador">Borrador</option><option value="confirmada">Confirmada</option><option value="anulada">Anulada</option></Select>
-        </div>
-        <DataTable head={["Número", "Fecha", "Productos", "Método", "Total", "Estado", ""]} empty={!rows.length}>
+        <DataTable head={head} empty={!rows.length}>
           {rows.map((v) => (
             <tr key={v.id}>
               <td className="whitespace-nowrap font-semibold">{v.number}</td>

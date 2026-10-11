@@ -36,11 +36,7 @@ function Recetas() {
       <PageHeader title="Recetas" description="Ingredientes, rendimiento y costo de cada preparación o pizza"
         actions={<Button onClick={() => setEdit({ name: "", productId: "", yield: 1, ingredients: [{ productId: "", qty: 0, unit: "kg" }] })}><Plus className="h-4 w-4" />Nueva receta</Button>} />
       <Panel>
-        <div className="flex flex-wrap gap-2 border-b p-3">
-          <div className="relative min-w-56 flex-1"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="pl-8" placeholder="Buscar receta" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-          <Select className="w-48" value={cat} onChange={setCat}><option value="">Todos los tipos</option><option value="preparacion">Preparaciones</option><option value="venta">Pizzas (venta)</option></Select>
-        </div>
-        <DataTable head={["Receta", "Producto resultante", "Rendimiento", "Ingredientes", "Costo receta", "Costo unitario", ""]} empty={!rows.length}>
+        <DataTable head={head} empty={!rows.length}>
           {rows.map((r) => {
             const p = prod(r.productId);
             const c = recipeCost(s, r);
