@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search, Eye, Pencil, Play, CheckCheck, Ban, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, Search, Eye, Pencil, Play, CheckCheck, Ban, Trash2, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
+import { AiAssistantPanel } from "@/components/ai-assistant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStore, saveOrder, setOrderStatus, deleteOrder, requirements, orderCost, fmtCOP, fmtQty, fmtDate, fmtDateTime, type ProductionOrder, type OrderStatus } from "@/lib/store";
@@ -9,6 +10,7 @@ import { PageHeader, Panel, DataTable, SidePanel, FormFooter, Confirm, Field, Se
 import { OrderBadge, ORDER_LABEL } from "@/components/badges";
 
 export const Route = createFileRoute("/app/produccion")({
+  validateSearch: (s: Record<string, unknown>): { ia?: boolean } => (s["ia"] === true || s["ia"] === "1" || s["ia"] === 1 ? { ia: true } : {}),
   head: () => ({ meta: [{ title: "Producción — Synthex Kitchen" }, { name: "description", content: "Órdenes de producción de masas y salsas." }, { property: "og:title", content: "Producción — Synthex Kitchen" }, { property: "og:description", content: "Transforma materias primas en preparaciones." }] }),
   component: Produccion,
 });
@@ -18,6 +20,10 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 function Produccion() {
   const s = useStore()!;
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const [ai, setAi] = useState(!!search.ia);
+  const closeAi = () => { setAi(false); if (search.ia) void navigate({ search: {}, replace: true }); };
   const [edit, setEdit] = useState<Draft | null>(null);
   const [view, setView] = useState<string | null>(null);
   const [act, setAct] = useState<{ o: ProductionOrder; to: OrderStatus | "delete" } | null>(null);
@@ -57,7 +63,8 @@ function Produccion() {
 
   return (
     <>
-      <PageHeader title="Producción" description="Transforma materias primas en preparaciones" actions={<Button onClick={() => setEdit({ recipeId: "", qty: 1, date: today(), status: "borrador" })}><Plus className="h-4 w-4" />Nueva orden de producción</Button>} />
+      <PageHeader title="Producción" description="Transforma materias primas en preparaciones" actions={<><Button variant="outline" onClick={() => setAi(true)}><Sparkles className="h-4 w-4" />Sugerir con IA</Button><Button onClick={() => setEdit({ recipeId: "", qty: 1, date: today(), status: "borrador" })}><Plus className="h-4 w-4" />Nueva orden de producción</Button></>} />
+      <AiAssistantPanel open={ai} onClose={closeAi} />
       <Panel>
         <DataTable head={head} empty={!rows.length}>
           {rows.map((o) => {
