@@ -4,6 +4,7 @@ import { Plus, Search, Eye, Pencil, Play, CheckCheck, Ban, Trash2, CheckCircle2,
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStore, saveOrder, setOrderStatus, deleteOrder, requirements, orderCost, fmtCOP, fmtQty, fmtDate, fmtDateTime, type ProductionOrder, type OrderStatus } from "@/lib/store";
+import { useColumnTable, type Col } from "@/components/col-table";
 import { PageHeader, Panel, DataTable, SidePanel, FormFooter, Confirm, Field, Select, notify } from "@/components/kit";
 import { OrderBadge, ORDER_LABEL } from "@/components/badges";
 
@@ -17,14 +18,21 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 function Produccion() {
   const s = useStore()!;
-  const [q, setQ] = useState("");
-  const [st, setSt] = useState("");
   const [edit, setEdit] = useState<Draft | null>(null);
   const [view, setView] = useState<string | null>(null);
   const [act, setAct] = useState<{ o: ProductionOrder; to: OrderStatus | "delete" } | null>(null);
   const recipe = (id: string) => s.recipes.find((r) => r.id === id);
   const prodOf = (o: ProductionOrder) => s.products.find((p) => p.id === recipe(o.recipeId)?.productId);
-  const rows = s.orders.filter((o) => (!st || o.status === st) && `${o.code} ${prodOf(o)?.name}`.toLowerCase().includes(q.toLowerCase()));
+  const cols: Col<ProductionOrder>[] = [
+    { label: "Código", type: "text", value: (o) => o.code },
+    { label: "Fecha", type: "date", value: (o) => o.date },
+    { label: "Producto", type: "select", value: (o) => prodOf(o)?.name ?? "" },
+    { label: "Cantidad", type: "number", value: (o) => o.qty },
+    { label: "Costo estimado", type: "number", value: (o) => orderCost(s, o) },
+    { label: "Estado", type: "select", value: (o) => ORDER_LABEL[o.status] },
+    { label: "", type: "none" },
+  ];
+  const { rows, head } = useColumnTable(s.orders, cols);
   const viewed = s.orders.find((o) => o.id === view);
 
   const run = (o: ProductionOrder, to: OrderStatus | "delete") => {

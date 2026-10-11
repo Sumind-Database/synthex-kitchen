@@ -4,6 +4,7 @@ import { Plus, Search, Pencil, Trash2, X, CheckCircle2, AlertCircle } from "luci
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStore, saveRecipe, deleteRecipe, recipeCost, requirements, unitsFor, fmtCOP, fmtQty, CATEGORY_LABEL, type Recipe, type Unit } from "@/lib/store";
+import { useColumnTable, type Col } from "@/components/col-table";
 import { PageHeader, Panel, DataTable, SidePanel, FormFooter, Confirm, Field, Select, Tag, notify } from "@/components/kit";
 
 export const Route = createFileRoute("/app/recetas")({
@@ -15,12 +16,20 @@ type Draft = Omit<Recipe, "id"> & { id?: string };
 
 function Recetas() {
   const s = useStore()!;
-  const [q, setQ] = useState("");
-  const [cat, setCat] = useState("");
   const [edit, setEdit] = useState<Draft | null>(null);
   const [del, setDel] = useState<Recipe | null>(null);
   const prod = (id: string) => s.products.find((p) => p.id === id);
-  const rows = s.recipes.filter((r) => r.name.toLowerCase().includes(q.toLowerCase()) && (!cat || prod(r.productId)?.category === cat));
+  const cols: Col<Recipe>[] = [
+    { label: "Receta", type: "text", value: (r) => r.name },
+    { label: "Producto resultante", type: "select", value: (r) => prod(r.productId)?.name ?? "" },
+    { label: "Tipo", type: "select", value: (r) => { const p = prod(r.productId); return p ? CATEGORY_LABEL[p.category] : ""; } },
+    { label: "Rendimiento", type: "number", value: (r) => r.yield },
+    { label: "Ingredientes", type: "number", value: (r) => r.ingredients.length },
+    { label: "Costo receta", type: "number", value: (r) => recipeCost(s, r).total },
+    { label: "Costo unitario", type: "number", value: (r) => recipeCost(s, r).perUnit },
+    { label: "", type: "none" },
+  ];
+  const { rows, head } = useColumnTable(s.recipes, cols);
 
   return (
     <>
@@ -38,7 +47,8 @@ function Recetas() {
             return (
               <tr key={r.id}>
                 <td className="font-medium">{r.name}</td>
-                <td>{p?.name} <span className="ml-1"><Tag tone={p?.category === "venta" ? "blue" : "green"}>{p ? CATEGORY_LABEL[p.category] : ""}</Tag></span></td>
+                <td>{p?.name}</td>
+                <td><Tag tone={p?.category === "venta" ? "blue" : "green"}>{p ? CATEGORY_LABEL[p.category] : ""}</Tag></td>
                 <td>{fmtQty(r.yield, p?.unit ?? "und")}</td>
                 <td className="text-muted-foreground">{r.ingredients.length}</td>
                 <td>{fmtCOP(c.total)}</td>

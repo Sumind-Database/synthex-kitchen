@@ -4,6 +4,7 @@ import { Plus, Search, Eye, Trash2, Undo2, Minus, X, AlertCircle, Pencil } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStore, saveSale, voidSale, deleteSale, saleNeeds, fmtCOP, fmtQty, fmtDateTime, type Sale, type SaleItem, type PayMethod } from "@/lib/store";
+import { useColumnTable, type Col } from "@/components/col-table";
 import { PageHeader, Panel, DataTable, SidePanel, Confirm, Field, Select, notify } from "@/components/kit";
 import { SaleBadge } from "@/components/badges";
 
@@ -15,15 +16,23 @@ export const Route = createFileRoute("/app/ventas")({
 type Draft = { id?: string; items: SaleItem[]; method: PayMethod; date: string };
 const nowLocal = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
 
+const SALE_TXT: Record<string, string> = { borrador: "Borrador", confirmada: "Confirmada", anulada: "Anulada" };
+
 function Ventas() {
   const s = useStore()!;
-  const [q, setQ] = useState("");
-  const [st, setSt] = useState("");
-  const [date, setDate] = useState("");
   const [edit, setEdit] = useState<Draft | null>(null);
   const [view, setView] = useState<string | null>(null);
   const [act, setAct] = useState<{ v: Sale; kind: "void" | "delete" } | null>(null);
-  const rows = s.sales.filter((v) => v.number.toLowerCase().includes(q.toLowerCase()) && (!st || v.status === st) && (!date || v.date.slice(0, 10) === date));
+  const cols: Col<Sale>[] = [
+    { label: "Número", type: "text", value: (v) => v.number },
+    { label: "Fecha", type: "date", value: (v) => v.date },
+    { label: "Productos", type: "text", value: (v) => v.items.map((i) => `${i.qty}× ${i.name}`).join(", ") },
+    { label: "Método", type: "select", value: (v) => v.method },
+    { label: "Total", type: "number", value: (v) => v.total },
+    { label: "Estado", type: "select", value: (v) => SALE_TXT[v.status] ?? v.status },
+    { label: "", type: "none" },
+  ];
+  const { rows, head } = useColumnTable(s.sales, cols, { i: 1, dir: "desc" });
   const viewed = s.sales.find((v) => v.id === view);
 
   return (

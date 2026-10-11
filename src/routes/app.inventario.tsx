@@ -9,6 +9,9 @@ import {
 } from "@/lib/store";
 import { PageHeader, Panel, DataTable, SidePanel, FormFooter, Confirm, Field, Select, notify } from "@/components/kit";
 import { StockBadge, MoveBadge } from "@/components/badges";
+import { useColumnTable, type Col } from "@/components/col-table";
+
+const LVL = { optimo: "Óptimo", bajo: "Stock bajo", agotado: "Agotado" } as const;
 
 export const Route = createFileRoute("/app/inventario")({
   head: () => ({ meta: [{ title: "Inventario — Synthex Kitchen" }, { name: "description", content: "Productos, existencias y estados de stock." }, { property: "og:title", content: "Inventario — Synthex Kitchen" }, { property: "og:description", content: "Control de existencias de la pizzería." }] }),
@@ -20,22 +23,23 @@ const blank: Draft = { name: "", sku: "", category: "materia", unit: "kg", stock
 
 function Inventario() {
   const s = useStore()!;
-  const [q, setQ] = useState("");
-  const [cat, setCat] = useState("");
-  const [st, setSt] = useState("");
-  const [lvl, setLvl] = useState("");
   const [edit, setEdit] = useState<Draft | null>(null);
   const [view, setView] = useState<string | null>(null);
   const [del, setDel] = useState<Product | null>(null);
   const [blocked, setBlocked] = useState<{ p: Product; why: string } | null>(null);
 
-  const rows = useMemo(() => s.products.filter((p) => {
-    if (q && !`${p.name} ${p.sku}`.toLowerCase().includes(q.toLowerCase())) return false;
-    if (cat && p.category !== cat) return false;
-    if (st && (st === "activo") !== p.active) return false;
-    if (lvl && stockStatus(p) !== lvl) return false;
-    return true;
-  }), [s.products, q, cat, st, lvl]);
+  const cols = useMemo<Col<Product>[]>(() => [
+    { label: "Producto", type: "text", value: (p) => p.name },
+    { label: "SKU", type: "text", value: (p) => p.sku },
+    { label: "Categoría", type: "select", value: (p) => CATEGORY_LABEL[p.category] },
+    { label: "Stock", type: "number", value: (p) => p.stock },
+    { label: "Mínimo", type: "number", value: (p) => p.min },
+    { label: "Costo unit.", type: "number", value: (p) => productCost(s, p) },
+    { label: "Precio venta", type: "number", value: (p) => p.price ?? 0 },
+    { label: "Estado", type: "select", value: (p) => !p.active ? "Inactivo" : p.category === "venta" ? "Bajo pedido" : LVL[stockStatus(p)] },
+    { label: "", type: "none" },
+  ], [s]);
+  const { rows, head } = useColumnTable(s.products, cols);
 
   const viewed = s.products.find((p) => p.id === view);
 
