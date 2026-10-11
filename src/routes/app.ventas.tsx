@@ -38,7 +38,7 @@ function Ventas() {
         <DataTable head={["Número", "Fecha", "Productos", "Método", "Total", "Estado", ""]} empty={!rows.length}>
           {rows.map((v) => (
             <tr key={v.id}>
-              <td className="font-semibold">{v.number}</td>
+              <td className="whitespace-nowrap font-semibold">{v.number}</td>
               <td className="whitespace-nowrap text-muted-foreground">{fmtDateTime(v.date)}</td>
               <td className="max-w-64 truncate">{v.items.map((i) => `${i.qty}× ${i.name}`).join(", ")}</td>
               <td>{v.method}</td>

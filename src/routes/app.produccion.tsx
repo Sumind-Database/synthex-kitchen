@@ -60,7 +60,7 @@ function Produccion() {
             const p = prodOf(o);
             return (
               <tr key={o.id}>
-                <td className="font-semibold">{o.code}</td>
+                <td className="whitespace-nowrap font-semibold">{o.code}</td>
                 <td className="text-muted-foreground">{fmtDate(o.date)}</td>
                 <td>{p?.name}</td>
                 <td>{fmtQty(o.qty, p?.unit ?? "und")}</td>

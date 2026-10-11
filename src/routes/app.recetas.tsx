@@ -98,7 +98,7 @@ function RecipeForm({ draft, onClose }: { draft: Draft; onClose: () => void }) {
             const p = s.products.find((x) => x.id === i.productId);
             return (
               <div key={idx} className="grid grid-cols-[1fr_100px_80px_32px] items-center gap-2">
-                <Select className={dupes.has(i.productId) ? "border-destructive" : ""} value={i.productId} onChange={(v) => { const np = s.products.find((x) => x.id === v); setIng(idx, { productId: v, unit: np ? unitsFor(np.unit)[0] : "kg" }); }}>
+                <Select className={dupes.has(i.productId) ? "border-destructive" : ""} value={i.productId} onChange={(v) => { const np = s.products.find((x) => x.id === v); setIng(idx, { productId: v, unit: np ? unitsFor(np.unit)[0]! : "kg" }); }}>
                   <option value="">Seleccionar insumo…</option>{inputs.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
                 </Select>
                 <Input type="number" min={0} step="any" className={i.qty <= 0 ? "border-destructive" : ""} value={i.qty} onChange={(e) => setIng(idx, { qty: Number(e.target.value) })} />
