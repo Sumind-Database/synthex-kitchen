@@ -18,7 +18,7 @@ export interface Product {
   stock: number;
   min: number;
   cost: number;
-  price?: number;
+  price?: number | undefined;
   active: boolean;
 }
 export interface Ingredient {
@@ -78,7 +78,7 @@ export interface Movement {
   after: number;
   reason: string;
   refType: RefType;
-  refId?: string;
+  refId?: string | undefined;
   refCode: string;
 }
 export interface State {
@@ -489,7 +489,7 @@ function buildSeed(): State {
   state = s;
   const mkOrder = (recipeId: string, qty: number, d: number, status: OrderStatus) => {
     saveOrder({ recipeId, qty, date: at(d, 9), status: "pendiente" });
-    const o = state!.orders[0];
+    const o = state!.orders[0]!;
     if (status === "completada") completeOrder(o.id, at(d, 10));
     else state = { ...state!, orders: state!.orders.map((x) => (x.id === o.id ? { ...x, status } : x)) };
   };

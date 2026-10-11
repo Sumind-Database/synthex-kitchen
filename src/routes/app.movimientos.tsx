@@ -61,7 +61,7 @@ function Movimientos() {
 
       {adj && (
         <SidePanel open onClose={() => setAdj(null)} title="Ajuste manual de inventario" description="Requiere confirmación y queda registrado en el libro."
-          footer={<FormFooter onCancel={() => setAdj(null)} onSave={() => { if (!adj.productId) return notify({ ok: false, error: "Selecciona un producto" }, ""); if (!adj.reason.trim()) return notify({ ok: false, error: "El motivo es obligatorio" }, ""); setConfirm(true); }} />}>
+          footer={<FormFooter onCancel={() => setAdj(null)} onSave={() => { if (!adj.productId) { notify({ ok: false, error: "Selecciona un producto" }, ""); return; } if (!adj.reason.trim()) { notify({ ok: false, error: "El motivo es obligatorio" }, ""); return; } setConfirm(true); }} />}>
           <Field label="Producto *"><Select value={adj.productId} onChange={(v) => setAdj({ ...adj, productId: v })}><option value="">Seleccionar…</option>{stockable.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</Select></Field>
           {sel && <p className="text-xs text-muted-foreground">Stock actual: <b>{fmtQty(sel.stock, sel.unit)}</b></p>}
           <div className="grid grid-cols-2 gap-3">

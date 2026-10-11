@@ -123,7 +123,7 @@ function ProductForm({ draft, onClose }: { draft: Draft; onClose: () => void }) 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
   const num = (v: string) => (v === "" ? 0 : Number(v));
   const save = () => {
-    if (d.category === "venta" && !(d.price && d.price > 0)) return notify({ ok: false, error: "Los productos de venta requieren precio" }, "");
+    if (d.category === "venta" && !(d.price && d.price > 0)) { notify({ ok: false, error: "Los productos de venta requieren precio" }, ""); return; }
     if (notify(saveProduct(d), d.id ? "Producto actualizado" : "Producto creado")) onClose();
   };
   return (

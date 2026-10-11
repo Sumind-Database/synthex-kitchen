@@ -147,7 +147,7 @@ export function Select({ value, onChange, children, className }: { value: string
   return <select value={value} onChange={(e) => onChange(e.target.value)} className={cn(selectCls, className)}>{children}</select>;
 }
 
-export function Kpi({ label, value, hint, icon, tone }: { label: string; value: string; hint?: string; icon: ReactNode; tone?: "red" | "amber" }) {
+export function Kpi({ label, value, hint, icon, tone }: { label: string; value: string; hint?: string | undefined; icon: ReactNode; tone?: "red" | "amber" | undefined }) {
   return (
     <div className="rounded-lg border bg-card p-4">
       <div className="flex items-start justify-between">
