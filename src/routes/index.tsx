@@ -1,24 +1,52 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Pizza, Package, Factory, ShoppingCart } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "PizzaFlow — Ingresar" },
+      { name: "description", content: "PizzaFlow: inventario, recetas, producción y ventas para pizzerías." },
+      { property: "og:title", content: "PizzaFlow — Gestión para pizzerías" },
+      { property: "og:description", content: "Inventario, recetas, producción y ventas en un solo lugar." },
+    ],
+  }),
+  component: Login,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Login() {
+  const nav = useNavigate();
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="grid min-h-screen lg:grid-cols-2">
+      <div className="hidden flex-col justify-between bg-sidebar p-12 text-sidebar-foreground lg:flex">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"><Pizza className="h-6 w-6" /></div>
+          <span className="text-xl font-bold text-sidebar-accent-foreground">PizzaFlow</span>
+        </div>
+        <div>
+          <h2 className="max-w-md text-4xl font-bold leading-tight text-sidebar-accent-foreground">Del costal de harina a la pizza vendida, todo bajo control.</h2>
+          <div className="mt-8 space-y-3 text-sm">
+            {[[Package, "Inventario con alertas de reposición"], [Factory, "Órdenes de producción por receta"], [ShoppingCart, "Ventas que descuentan insumos automáticamente"]].map(([I, t]: any) => (
+              <div key={t} className="flex items-center gap-3"><I className="h-4 w-4 text-sidebar-primary" />{t}</div>
+            ))}
+          </div>
+        </div>
+        <div className="text-xs opacity-60">© 2026 PizzaFlow · Forno Pizza</div>
+      </div>
+      <div className="flex items-center justify-center bg-background p-6">
+        <form className="w-full max-w-sm space-y-5 rounded-xl border bg-card p-8" onSubmit={(e) => { e.preventDefault(); nav({ to: "/app" }); }}>
+          <div>
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground lg:hidden"><Pizza className="h-6 w-6" /></div>
+            <h1 className="text-2xl font-bold">Bienvenido a PizzaFlow</h1>
+            <p className="text-sm text-muted-foreground">Ingresa para gestionar Forno Pizza.</p>
+          </div>
+          <div className="space-y-1.5"><label className="text-xs font-semibold">Correo</label><Input type="email" defaultValue="laura@fornopizza.co" /></div>
+          <div className="space-y-1.5"><label className="text-xs font-semibold">Contraseña</label><Input type="password" defaultValue="demo1234" /></div>
+          <Button type="submit" className="w-full">Ingresar</Button>
+          <p className="text-center text-[11px] text-muted-foreground">Prototipo demo: no se validan credenciales.</p>
+        </form>
+      </div>
     </div>
   );
 }
