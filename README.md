@@ -7,7 +7,7 @@ Caso de uso: *Forno Pizza*, una pizzería que transforma materias primas en prep
 
 | Entregable | Enlace |
 | --- | --- |
-| Demo funcional | `<!-- PEGAR AQUÍ EL LINK PUBLICADO DE LOVABLE -->` |
+| Demo funcional | [(https://synthex-kitchen.lovable.app) ]|
 | Video (máx. 8 min) | `<!-- PEGAR AQUÍ EL LINK DEL VIDEO -->` |
 | Flujo del aplicativo | [Diagrama en este README](#5-flujo-del-aplicativo) · [archivo de Excalidraw](docs/flujo-synthex-kitchen.excalidraw) |
 | Prompt usado para construir con IA | [`docs/PROMPT_ORIGINAL.md`](docs/PROMPT_ORIGINAL.md) |
