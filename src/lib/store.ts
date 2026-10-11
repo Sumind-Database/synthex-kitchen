@@ -148,7 +148,7 @@ export function productLinked(s: State, id: string): string | null {
 }
 
 // ---------- Store ----------
-const KEY = "pizzaflow-state-v1";
+const KEY = "pizzaflow-state-v2";
 let state: State | null = null;
 const listeners = new Set<() => void>();
 function load(): State {
@@ -483,7 +483,7 @@ function buildSeed(): State {
   const at = (daysAgo: number, h: number) => { const d = new Date(now - daysAgo * day); d.setHours(h, 0, 0, 0); return d.toISOString(); };
   let s: State = { products, recipes, orders: [], sales: [], movements: [], seq: { order: 0, sale: 0, adj: 0 } };
   // Initial stock (the opening balance requested), 8 days ago
-  const initial: Record<string, number> = { harina: 30, queso: 16, tomate: 10, pepperoni: 4.8, champ: 3.8, aceite: 2.2, masa: 6, salsa: 2 };
+  const initial: Record<string, number> = { harina: 30, queso: 16, tomate: 10, pepperoni: 4.8, champ: 1.3, aceite: 0.66, masa: 6, salsa: 2 };
   const r0 = applyDeltas(s, Object.entries(initial).map(([productId, qty]) => ({ productId, qty })), { type: "entrada", reason: "Inventario inicial", refType: "ajuste", refCode: "AJ-0001", date: at(8, 8) });
   s = { ...(r0 as State), seq: { order: 0, sale: 0, adj: 1 } };
   state = s;
