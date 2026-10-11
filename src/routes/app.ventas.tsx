@@ -4,38 +4,42 @@ import { Plus, Search, Eye, Trash2, Undo2, Minus, X, AlertCircle, Pencil } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStore, saveSale, voidSale, deleteSale, saleNeeds, fmtCOP, fmtQty, fmtDateTime, type Sale, type SaleItem, type PayMethod } from "@/lib/store";
+import { useColumnTable, type Col } from "@/components/col-table";
 import { PageHeader, Panel, DataTable, SidePanel, Confirm, Field, Select, notify } from "@/components/kit";
 import { SaleBadge } from "@/components/badges";
 
 export const Route = createFileRoute("/app/ventas")({
-  head: () => ({ meta: [{ title: "Ventas — PizzaFlow" }, { name: "description", content: "Registro de ventas de pizzas con descuento automático de insumos." }, { property: "og:title", content: "Ventas — PizzaFlow" }, { property: "og:description", content: "Ventas de Forno Pizza." }] }),
+  head: () => ({ meta: [{ title: "Ventas — Synthex Kitchen" }, { name: "description", content: "Registro de ventas de pizzas con descuento automático de insumos." }, { property: "og:title", content: "Ventas — Synthex Kitchen" }, { property: "og:description", content: "Ventas de Forno Pizza." }] }),
   component: Ventas,
 });
 
 type Draft = { id?: string; items: SaleItem[]; method: PayMethod; date: string };
 const nowLocal = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
 
+const SALE_TXT: Record<string, string> = { borrador: "Borrador", confirmada: "Confirmada", anulada: "Anulada" };
+
 function Ventas() {
   const s = useStore()!;
-  const [q, setQ] = useState("");
-  const [st, setSt] = useState("");
-  const [date, setDate] = useState("");
   const [edit, setEdit] = useState<Draft | null>(null);
   const [view, setView] = useState<string | null>(null);
   const [act, setAct] = useState<{ v: Sale; kind: "void" | "delete" } | null>(null);
-  const rows = s.sales.filter((v) => v.number.toLowerCase().includes(q.toLowerCase()) && (!st || v.status === st) && (!date || v.date.slice(0, 10) === date));
+  const cols: Col<Sale>[] = [
+    { label: "Número", type: "text", value: (v) => v.number },
+    { label: "Fecha", type: "date", value: (v) => v.date },
+    { label: "Productos", type: "text", value: (v) => v.items.map((i) => `${i.qty}× ${i.name}`).join(", ") },
+    { label: "Método", type: "select", value: (v) => v.method },
+    { label: "Total", type: "number", value: (v) => v.total },
+    { label: "Estado", type: "select", value: (v) => SALE_TXT[v.status] ?? v.status },
+    { label: "", type: "none" },
+  ];
+  const { rows, head } = useColumnTable(s.sales, cols, { i: 1, dir: "desc" });
   const viewed = s.sales.find((v) => v.id === view);
 
   return (
     <>
       <PageHeader title="Ventas" description="Pizzas vendidas y consumo automático de componentes" actions={<Button onClick={() => setEdit({ items: [], method: "Efectivo", date: nowLocal() })}><Plus className="h-4 w-4" />Nueva venta</Button>} />
       <Panel>
-        <div className="flex flex-wrap gap-2 border-b p-3">
-          <div className="relative min-w-56 flex-1"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="pl-8" placeholder="Buscar por número (V-00001)" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-          <Input type="date" className="w-40" value={date} onChange={(e) => setDate(e.target.value)} />
-          <Select className="w-40" value={st} onChange={setSt}><option value="">Todos los estados</option><option value="borrador">Borrador</option><option value="confirmada">Confirmada</option><option value="anulada">Anulada</option></Select>
-        </div>
-        <DataTable head={["Número", "Fecha", "Productos", "Método", "Total", "Estado", ""]} empty={!rows.length}>
+        <DataTable head={head} empty={!rows.length}>
           {rows.map((v) => (
             <tr key={v.id}>
               <td className="whitespace-nowrap font-semibold">{v.number}</td>

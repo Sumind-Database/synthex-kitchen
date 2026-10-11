@@ -4,10 +4,11 @@ import { Plus, Search, Pencil, Trash2, X, CheckCircle2, AlertCircle } from "luci
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStore, saveRecipe, deleteRecipe, recipeCost, requirements, unitsFor, fmtCOP, fmtQty, CATEGORY_LABEL, type Recipe, type Unit } from "@/lib/store";
+import { useColumnTable, type Col } from "@/components/col-table";
 import { PageHeader, Panel, DataTable, SidePanel, FormFooter, Confirm, Field, Select, Tag, notify } from "@/components/kit";
 
 export const Route = createFileRoute("/app/recetas")({
-  head: () => ({ meta: [{ title: "Recetas — PizzaFlow" }, { name: "description", content: "Recetas, ingredientes y costos de preparaciones y pizzas." }, { property: "og:title", content: "Recetas — PizzaFlow" }, { property: "og:description", content: "Costeo de recetas de la pizzería." }] }),
+  head: () => ({ meta: [{ title: "Recetas — Synthex Kitchen" }, { name: "description", content: "Recetas, ingredientes y costos de preparaciones y pizzas." }, { property: "og:title", content: "Recetas — Synthex Kitchen" }, { property: "og:description", content: "Costeo de recetas de la pizzería." }] }),
   component: Recetas,
 });
 
@@ -15,30 +16,35 @@ type Draft = Omit<Recipe, "id"> & { id?: string };
 
 function Recetas() {
   const s = useStore()!;
-  const [q, setQ] = useState("");
-  const [cat, setCat] = useState("");
   const [edit, setEdit] = useState<Draft | null>(null);
   const [del, setDel] = useState<Recipe | null>(null);
   const prod = (id: string) => s.products.find((p) => p.id === id);
-  const rows = s.recipes.filter((r) => r.name.toLowerCase().includes(q.toLowerCase()) && (!cat || prod(r.productId)?.category === cat));
+  const cols: Col<Recipe>[] = [
+    { label: "Receta", type: "text", value: (r) => r.name },
+    { label: "Producto resultante", type: "select", value: (r) => prod(r.productId)?.name ?? "" },
+    { label: "Tipo", type: "select", value: (r) => { const p = prod(r.productId); return p ? CATEGORY_LABEL[p.category] : ""; } },
+    { label: "Rendimiento", type: "number", value: (r) => r.yield },
+    { label: "Ingredientes", type: "number", value: (r) => r.ingredients.length },
+    { label: "Costo receta", type: "number", value: (r) => recipeCost(s, r).total },
+    { label: "Costo unitario", type: "number", value: (r) => recipeCost(s, r).perUnit },
+    { label: "", type: "none" },
+  ];
+  const { rows, head } = useColumnTable(s.recipes, cols);
 
   return (
     <>
       <PageHeader title="Recetas" description="Ingredientes, rendimiento y costo de cada preparación o pizza"
         actions={<Button onClick={() => setEdit({ name: "", productId: "", yield: 1, ingredients: [{ productId: "", qty: 0, unit: "kg" }] })}><Plus className="h-4 w-4" />Nueva receta</Button>} />
       <Panel>
-        <div className="flex flex-wrap gap-2 border-b p-3">
-          <div className="relative min-w-56 flex-1"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="pl-8" placeholder="Buscar receta" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-          <Select className="w-48" value={cat} onChange={setCat}><option value="">Todos los tipos</option><option value="preparacion">Preparaciones</option><option value="venta">Pizzas (venta)</option></Select>
-        </div>
-        <DataTable head={["Receta", "Producto resultante", "Rendimiento", "Ingredientes", "Costo receta", "Costo unitario", ""]} empty={!rows.length}>
+        <DataTable head={head} empty={!rows.length}>
           {rows.map((r) => {
             const p = prod(r.productId);
             const c = recipeCost(s, r);
             return (
               <tr key={r.id}>
                 <td className="font-medium">{r.name}</td>
-                <td>{p?.name} <span className="ml-1"><Tag tone={p?.category === "venta" ? "blue" : "green"}>{p ? CATEGORY_LABEL[p.category] : ""}</Tag></span></td>
+                <td>{p?.name}</td>
+                <td><Tag tone={p?.category === "venta" ? "blue" : "green"}>{p ? CATEGORY_LABEL[p.category] : ""}</Tag></td>
                 <td>{fmtQty(r.yield, p?.unit ?? "und")}</td>
                 <td className="text-muted-foreground">{r.ingredients.length}</td>
                 <td>{fmtCOP(c.total)}</td>

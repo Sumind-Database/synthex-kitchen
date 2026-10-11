@@ -4,11 +4,12 @@ import { Plus, Search, Eye, Pencil, Play, CheckCheck, Ban, Trash2, CheckCircle2,
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStore, saveOrder, setOrderStatus, deleteOrder, requirements, orderCost, fmtCOP, fmtQty, fmtDate, fmtDateTime, type ProductionOrder, type OrderStatus } from "@/lib/store";
+import { useColumnTable, type Col } from "@/components/col-table";
 import { PageHeader, Panel, DataTable, SidePanel, FormFooter, Confirm, Field, Select, notify } from "@/components/kit";
 import { OrderBadge, ORDER_LABEL } from "@/components/badges";
 
 export const Route = createFileRoute("/app/produccion")({
-  head: () => ({ meta: [{ title: "Producción — PizzaFlow" }, { name: "description", content: "Órdenes de producción de masas y salsas." }, { property: "og:title", content: "Producción — PizzaFlow" }, { property: "og:description", content: "Transforma materias primas en preparaciones." }] }),
+  head: () => ({ meta: [{ title: "Producción — Synthex Kitchen" }, { name: "description", content: "Órdenes de producción de masas y salsas." }, { property: "og:title", content: "Producción — Synthex Kitchen" }, { property: "og:description", content: "Transforma materias primas en preparaciones." }] }),
   component: Produccion,
 });
 
@@ -17,14 +18,21 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 function Produccion() {
   const s = useStore()!;
-  const [q, setQ] = useState("");
-  const [st, setSt] = useState("");
   const [edit, setEdit] = useState<Draft | null>(null);
   const [view, setView] = useState<string | null>(null);
   const [act, setAct] = useState<{ o: ProductionOrder; to: OrderStatus | "delete" } | null>(null);
   const recipe = (id: string) => s.recipes.find((r) => r.id === id);
   const prodOf = (o: ProductionOrder) => s.products.find((p) => p.id === recipe(o.recipeId)?.productId);
-  const rows = s.orders.filter((o) => (!st || o.status === st) && `${o.code} ${prodOf(o)?.name}`.toLowerCase().includes(q.toLowerCase()));
+  const cols: Col<ProductionOrder>[] = [
+    { label: "Código", type: "text", value: (o) => o.code },
+    { label: "Fecha", type: "date", value: (o) => o.date },
+    { label: "Producto", type: "select", value: (o) => prodOf(o)?.name ?? "" },
+    { label: "Cantidad", type: "number", value: (o) => o.qty },
+    { label: "Costo estimado", type: "number", value: (o) => orderCost(s, o) },
+    { label: "Estado", type: "select", value: (o) => ORDER_LABEL[o.status] },
+    { label: "", type: "none" },
+  ];
+  const { rows, head } = useColumnTable(s.orders, cols);
   const viewed = s.orders.find((o) => o.id === view);
 
   const run = (o: ProductionOrder, to: OrderStatus | "delete") => {
@@ -51,11 +59,7 @@ function Produccion() {
     <>
       <PageHeader title="Producción" description="Transforma materias primas en preparaciones" actions={<Button onClick={() => setEdit({ recipeId: "", qty: 1, date: today(), status: "borrador" })}><Plus className="h-4 w-4" />Nueva orden de producción</Button>} />
       <Panel>
-        <div className="flex flex-wrap gap-2 border-b p-3">
-          <div className="relative min-w-56 flex-1"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="pl-8" placeholder="Buscar por código o producto" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-          <Select className="w-44" value={st} onChange={setSt}><option value="">Todos los estados</option>{Object.entries(ORDER_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>
-        </div>
-        <DataTable head={["Código", "Fecha", "Producto", "Cantidad", "Costo estimado", "Estado", ""]} empty={!rows.length}>
+        <DataTable head={head} empty={!rows.length}>
           {rows.map((o) => {
             const p = prodOf(o);
             return (

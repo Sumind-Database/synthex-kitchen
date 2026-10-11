@@ -4,26 +4,36 @@ import { SlidersHorizontal, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStore, manualAdjust, fmtQty, fmtDateTime, type MoveType } from "@/lib/store";
+import { useColumnTable, type Col } from "@/components/col-table";
 import { PageHeader, Panel, DataTable, SidePanel, FormFooter, Confirm, Field, Select, Tag, notify } from "@/components/kit";
 import { MoveBadge } from "@/components/badges";
 
 export const Route = createFileRoute("/app/movimientos")({
-  head: () => ({ meta: [{ title: "Movimientos — PizzaFlow" }, { name: "description", content: "Libro de movimientos de inventario con trazabilidad." }, { property: "og:title", content: "Movimientos — PizzaFlow" }, { property: "og:description", content: "Entradas, salidas y ajustes de inventario." }] }),
+  head: () => ({ meta: [{ title: "Movimientos — Synthex Kitchen" }, { name: "description", content: "Libro de movimientos de inventario con trazabilidad." }, { property: "og:title", content: "Movimientos — Synthex Kitchen" }, { property: "og:description", content: "Entradas, salidas y ajustes de inventario." }] }),
   component: Movimientos,
 });
 
+const MT: Record<string, string> = { entrada: "Entrada", salida: "Salida", ajuste: "Ajuste" };
 const REF = { produccion: "Producción", venta: "Venta", ajuste: "Ajuste manual", anulacion: "Anulación" } as const;
 
 function Movimientos() {
   const s = useStore()!;
-  const [prod, setProd] = useState("");
-  const [type, setType] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
   const [adj, setAdj] = useState<{ productId: string; type: MoveType; qty: number; reason: string } | null>(null);
   const [confirm, setConfirm] = useState(false);
   const stockable = s.products.filter((p) => p.category !== "venta");
-  const rows = s.movements.filter((m) => (!prod || m.productId === prod) && (!type || m.type === type) && (!from || m.date.slice(0, 10) >= from) && (!to || m.date.slice(0, 10) <= to));
+  const PN = (id: string) => s.products.find((p) => p.id === id);
+  const cols: Col<(typeof s.movements)[number]>[] = [
+    { label: "Fecha y hora", type: "date", value: (m) => m.date },
+    { label: "Producto", type: "select", value: (m) => PN(m.productId)?.name ?? "—" },
+    { label: "Tipo", type: "select", value: (m) => MT[m.type] ?? m.type },
+    { label: "Cantidad", type: "number", value: (m) => m.qty },
+    { label: "Anterior", type: "number", value: (m) => m.before },
+    { label: "Posterior", type: "number", value: (m) => m.after },
+    { label: "Motivo", type: "text", value: (m) => m.reason },
+    { label: "Documento", type: "select", value: (m) => REF[m.refType] },
+    { label: "", type: "none" },
+  ];
+  const { rows, head } = useColumnTable(s.movements, cols);
   const P = (id: string) => s.products.find((p) => p.id === id);
   const sel = adj && P(adj.productId);
 
@@ -31,14 +41,7 @@ function Movimientos() {
     <>
       <PageHeader title="Movimientos" description="Libro de entradas, salidas y ajustes de inventario" actions={<Button onClick={() => setAdj({ productId: "", type: "entrada", qty: 0, reason: "" })}><SlidersHorizontal className="h-4 w-4" />Ajuste manual</Button>} />
       <Panel>
-        <div className="flex flex-wrap items-center gap-2 border-b p-3">
-          <Select className="w-52" value={prod} onChange={setProd}><option value="">Todos los productos</option>{stockable.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</Select>
-          <Select className="w-36" value={type} onChange={setType}><option value="">Todos los tipos</option><option value="entrada">Entrada</option><option value="salida">Salida</option><option value="ajuste">Ajuste</option></Select>
-          <span className="text-xs text-muted-foreground">Desde</span><Input type="date" className="w-40" value={from} onChange={(e) => setFrom(e.target.value)} />
-          <span className="text-xs text-muted-foreground">Hasta</span><Input type="date" className="w-40" value={to} onChange={(e) => setTo(e.target.value)} />
-          {(prod || type || from || to) && <Button variant="ghost" size="sm" onClick={() => { setProd(""); setType(""); setFrom(""); setTo(""); }}>Limpiar</Button>}
-        </div>
-        <DataTable head={["Fecha y hora", "Producto", "Tipo", "Cantidad", "Anterior", "Posterior", "Motivo", "Documento", ""]} empty={!rows.length}>
+        <DataTable head={head} empty={!rows.length}>
           {rows.map((m) => {
             const p = P(m.productId);
             const u = p?.unit ?? "und";

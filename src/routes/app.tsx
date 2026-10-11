@@ -30,7 +30,7 @@ function AppLayout() {
         <div className="flex items-center gap-2.5 px-5 py-5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"><Pizza className="h-5 w-5" /></div>
           <div>
-            <div className="text-base font-bold leading-tight text-sidebar-accent-foreground">PizzaFlow</div>
+            <div className="text-base font-bold leading-tight text-sidebar-accent-foreground">Synthex Kitchen</div>
             <div className="text-[11px] opacity-70">Forno Pizza</div>
           </div>
         </div>
@@ -63,7 +63,7 @@ function AppLayout() {
       <div className="lg:pl-60">
         <header className="sticky top-0 z-20 flex h-12 items-center border-b bg-card px-4 lg:hidden">
           <button aria-label="Menú" onClick={() => setOpen(true)}><Menu className="h-5 w-5" /></button>
-          <span className="ml-3 font-bold">PizzaFlow</span>
+          <span className="ml-3 font-bold">Synthex Kitchen</span>
         </header>
         <main className="mx-auto max-w-7xl p-5 md:p-8">
           {s ? <Outlet /> : <div className="py-20 text-center text-sm text-muted-foreground">Cargando…</div>}

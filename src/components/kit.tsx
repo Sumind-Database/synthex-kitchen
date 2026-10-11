@@ -147,15 +147,16 @@ export function Select({ value, onChange, children, className }: { value: string
   return <select value={value} onChange={(e) => onChange(e.target.value)} className={cn(selectCls, className)}>{children}</select>;
 }
 
-export function Kpi({ label, value, hint, icon, tone }: { label: string; value: string; hint?: string | undefined; icon: ReactNode; tone?: "red" | "amber" | undefined }) {
+export function Kpi({ label, value, hint, icon, tone, cta }: { label: string; value: string; hint?: string | undefined; icon: ReactNode; tone?: "red" | "amber" | undefined; cta?: ReactNode }) {
   return (
-    <div className="rounded-lg border bg-card p-4">
+    <div className="flex flex-col rounded-lg border bg-card p-4">
       <div className="flex items-start justify-between">
         <span className="text-xs font-medium text-muted-foreground">{label}</span>
         <span className={cn("rounded-md p-1.5", tone === "red" ? "bg-destructive/10 text-destructive" : tone === "amber" ? "bg-warning/10 text-warning" : "bg-accent text-chart-2")}>{icon}</span>
       </div>
       <div className="mt-2 text-2xl font-bold tracking-tight">{value}</div>
       {hint && <div className="mt-0.5 text-xs text-muted-foreground">{hint}</div>}
+      {cta && <div className="mt-auto pt-3">{cta}</div>}
     </div>
   );
 }
