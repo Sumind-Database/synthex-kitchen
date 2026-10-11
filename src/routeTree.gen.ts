@@ -10,33 +10,120 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppInventarioRouteImport } from './routes/app.inventario'
+import { Route as AppMovimientosRouteImport } from './routes/app.movimientos'
+import { Route as AppProduccionRouteImport } from './routes/app.produccion'
+import { Route as AppRecetasRouteImport } from './routes/app.recetas'
+import { Route as AppVentasRouteImport } from './routes/app.ventas'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInventarioRoute = AppInventarioRouteImport.update({
+  id: '/inventario',
+  path: '/inventario',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMovimientosRoute = AppMovimientosRouteImport.update({
+  id: '/movimientos',
+  path: '/movimientos',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProduccionRoute = AppProduccionRouteImport.update({
+  id: '/produccion',
+  path: '/produccion',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRecetasRoute = AppRecetasRouteImport.update({
+  id: '/recetas',
+  path: '/recetas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVentasRoute = AppVentasRouteImport.update({
+  id: '/ventas',
+  path: '/ventas',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/app/inventario': typeof AppInventarioRoute
+  '/app/movimientos': typeof AppMovimientosRoute
+  '/app/produccion': typeof AppProduccionRoute
+  '/app/recetas': typeof AppRecetasRoute
+  '/app/ventas': typeof AppVentasRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app/inventario': typeof AppInventarioRoute
+  '/app/movimientos': typeof AppMovimientosRoute
+  '/app/produccion': typeof AppProduccionRoute
+  '/app/recetas': typeof AppRecetasRoute
+  '/app/ventas': typeof AppVentasRoute
+  '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/app/inventario': typeof AppInventarioRoute
+  '/app/movimientos': typeof AppMovimientosRoute
+  '/app/produccion': typeof AppProduccionRoute
+  '/app/recetas': typeof AppRecetasRoute
+  '/app/ventas': typeof AppVentasRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/app/inventario'
+    | '/app/movimientos'
+    | '/app/produccion'
+    | '/app/recetas'
+    | '/app/ventas'
+    | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/app/inventario'
+    | '/app/movimientos'
+    | '/app/produccion'
+    | '/app/recetas'
+    | '/app/ventas'
+    | '/app'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/app/inventario'
+    | '/app/movimientos'
+    | '/app/produccion'
+    | '/app/recetas'
+    | '/app/ventas'
+    | '/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +135,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/inventario': {
+      id: '/app/inventario'
+      path: '/inventario'
+      fullPath: '/app/inventario'
+      preLoaderRoute: typeof AppInventarioRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/movimientos': {
+      id: '/app/movimientos'
+      path: '/movimientos'
+      fullPath: '/app/movimientos'
+      preLoaderRoute: typeof AppMovimientosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/produccion': {
+      id: '/app/produccion'
+      path: '/produccion'
+      fullPath: '/app/produccion'
+      preLoaderRoute: typeof AppProduccionRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/recetas': {
+      id: '/app/recetas'
+      path: '/recetas'
+      fullPath: '/app/recetas'
+      preLoaderRoute: typeof AppRecetasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/ventas': {
+      id: '/app/ventas'
+      path: '/ventas'
+      fullPath: '/app/ventas'
+      preLoaderRoute: typeof AppVentasRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppInventarioRoute: typeof AppInventarioRoute
+  AppMovimientosRoute: typeof AppMovimientosRoute
+  AppProduccionRoute: typeof AppProduccionRoute
+  AppRecetasRoute: typeof AppRecetasRoute
+  AppVentasRoute: typeof AppVentasRoute
+  AppIndexRoute: typeof AppIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppInventarioRoute: AppInventarioRoute,
+  AppMovimientosRoute: AppMovimientosRoute,
+  AppProduccionRoute: AppProduccionRoute,
+  AppRecetasRoute: AppRecetasRoute,
+  AppVentasRoute: AppVentasRoute,
+  AppIndexRoute: AppIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

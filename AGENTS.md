@@ -8,3 +8,4 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+- App data lives in a localStorage-backed store (src/lib/store.ts) with all inventory rules in pure actions — no backend connected, keeps the prototype self-contained.
