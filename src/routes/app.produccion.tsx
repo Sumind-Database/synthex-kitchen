@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search, Eye, Pencil, Play, CheckCheck, Ban, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, Search, Eye, Pencil, Play, CheckCheck, Ban, Trash2, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
+import { AiAssistantPanel } from "@/components/ai-assistant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStore, saveOrder, setOrderStatus, deleteOrder, requirements, orderCost, fmtCOP, fmtQty, fmtDate, fmtDateTime, type ProductionOrder, type OrderStatus } from "@/lib/store";
@@ -62,7 +63,8 @@ function Produccion() {
 
   return (
     <>
-      <PageHeader title="Producción" description="Transforma materias primas en preparaciones" actions={<Button onClick={() => setEdit({ recipeId: "", qty: 1, date: today(), status: "borrador" })}><Plus className="h-4 w-4" />Nueva orden de producción</Button>} />
+      <PageHeader title="Producción" description="Transforma materias primas en preparaciones" actions={<><Button variant="outline" onClick={() => setAi(true)}><Sparkles className="h-4 w-4" />Sugerir con IA</Button><Button onClick={() => setEdit({ recipeId: "", qty: 1, date: today(), status: "borrador" })}><Plus className="h-4 w-4" />Nueva orden de producción</Button></>} />
+      <AiAssistantPanel open={ai} onClose={closeAi} />
       <Panel>
         <DataTable head={head} empty={!rows.length}>
           {rows.map((o) => {

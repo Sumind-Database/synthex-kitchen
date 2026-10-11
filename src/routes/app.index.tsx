@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Wallet, Boxes, AlertTriangle, Factory, ShoppingCart, ArrowRight } from "lucide-react";
+import { Wallet, Boxes, AlertTriangle, Factory, ShoppingCart, ArrowRight, Sparkles } from "lucide-react";
 import { useStore, fmtCOP, fmtQty, stockStatus, CATEGORY_LABEL, type Category } from "@/lib/store";
 import { Kpi, PageHeader, Panel, Empty } from "@/components/kit";
 import { StockBadge } from "@/components/badges";
@@ -107,6 +107,16 @@ function Dashboard() {
             ))}
           </div>
         </Panel>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4">
+        <div className="flex items-start gap-3">
+          <span className="rounded-md bg-accent p-1.5 text-chart-2"><Sparkles className="h-4 w-4" /></span>
+          <div>
+            <div className="text-sm font-semibold">Asistente de producción IA</div>
+            <div className="text-xs text-muted-foreground">Sugiere cuánta masa y salsa preparar hoy según stock, recetas y ventas recientes.</div>
+          </div>
+        </div>
+        <Button size="sm" asChild><Link to="/app/produccion" search={{ ia: true }}><Sparkles className="h-3.5 w-3.5" />Sugerir producción</Link></Button>
       </div>
     </>
   );
