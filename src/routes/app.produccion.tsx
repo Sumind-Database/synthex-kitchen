@@ -114,7 +114,7 @@ function Produccion() {
         })()}
       </SidePanel>
 
-      <Confirm open={!!act} onClose={() => setAct(null)} title={act ? ACT_TEXT[act.to][0] : ""} description={act ? `${act.o.code}: ${ACT_TEXT[act.to][1]}` : ""}
+      <Confirm open={!!act} onClose={() => setAct(null)} title={act ? ACT_TEXT[act.to]![0] : ""} description={act ? `${act.o.code}: ${ACT_TEXT[act.to]![1]}` : ""}
         danger={act?.to === "delete" || act?.to === "cancelada"} onConfirm={() => act && run(act.o, act.to)} />
     </>
   );
