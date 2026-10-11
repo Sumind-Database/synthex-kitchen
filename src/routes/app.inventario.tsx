@@ -11,7 +11,7 @@ import { PageHeader, Panel, DataTable, SidePanel, FormFooter, Confirm, Field, Se
 import { StockBadge, MoveBadge } from "@/components/badges";
 import { useColumnTable, type Col } from "@/components/col-table";
 
-const LVL = { optimo: "Óptimo", bajo: "Stock bajo", agotado: "Agotado" } as const;
+const LVL = { na: "Bajo pedido", optimo: "Óptimo", bajo: "Stock bajo", agotado: "Agotado" } as const;
 
 export const Route = createFileRoute("/app/inventario")({
   head: () => ({ meta: [{ title: "Inventario — Synthex Kitchen" }, { name: "description", content: "Productos, existencias y estados de stock." }, { property: "og:title", content: "Inventario — Synthex Kitchen" }, { property: "og:description", content: "Control de existencias de la pizzería." }] }),
