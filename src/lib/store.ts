@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from "react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export type Category = "materia" | "preparacion" | "venta";
 export type BaseUnit = "kg" | "l" | "und";
@@ -147,32 +149,34 @@ export function productLinked(s: State, id: string): string | null {
   return null;
 }
 
-// ---------- Store ----------
-const KEY = "pizzaflow-state-v2";
+// ---------- Store (Lovable Cloud) ----------
+// Server is the source of truth: every action validates + updates local state optimistically,
+// then calls a database function that re-validates and applies stock atomically, then reloads.
 let state: State | null = null;
+let loading: Promise<void> | null = null;
 const listeners = new Set<() => void>();
-function load(): State {
-  if (state) return state;
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) {
-      state = JSON.parse(raw);
-      return state!;
-    }
-  } catch {}
-  state = buildSeed();
-  persist();
-  return state;
+export async function refresh() {
+  const { data, error } = await supabase.rpc("sk_get_state");
+  if (error) { toast.error("No se pudo cargar la información: " + error.message); return; }
+  state = data as unknown as State;
+  listeners.forEach((l) => l());
 }
-function persist() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  } catch {}
+function load(): State | null {
+  if (!state && !loading && typeof window !== "undefined") loading = refresh().finally(() => { loading = null; });
+  return state;
 }
 function commit(next: State) {
   state = next;
-  persist();
   listeners.forEach((l) => l());
+}
+let queue: Promise<unknown> = Promise.resolve();
+function sync(fn: string, args: Record<string, unknown>) {
+  // serialize writes so operations reach the server in the order they were made
+  queue = queue.then(async () => {
+    const { error } = await (supabase.rpc as unknown as (f: string, a: Record<string, unknown>) => Promise<{ error: { message: string } | null }>)(fn, args);
+    if (error) toast.error(error.message);
+    await refresh();
+  });
 }
 export function useStore(): State | null {
   return useSyncExternalStore(
@@ -185,8 +189,7 @@ export function useStore(): State | null {
   );
 }
 export function resetData() {
-  state = buildSeed();
-  commit(state);
+  sync("sk_reset_demo", {});
 }
 
 // apply stock deltas atomically on a cloned state
@@ -221,7 +224,7 @@ function applyDeltas(
 }
 
 // ---------- Actions ----------
-const cur = () => load();
+const cur = () => state!;
 
 export function saveProduct(p: Omit<Product, "id"> & { id?: string }): Result {
   const s = cur();
@@ -240,6 +243,7 @@ export function saveProduct(p: Omit<Product, "id"> & { id?: string }): Result {
       next = { ...r, seq: { ...r.seq, adj: r.seq.adj + 1 } };
     }
     commit(next);
+    sync("sk_save_product", { p });
   } else {
     const id = uid();
     let next: State = { ...s, products: [...s.products, { ...p, id, stock: 0, sku: p.sku.trim() } as Product] };
@@ -251,6 +255,7 @@ export function saveProduct(p: Omit<Product, "id"> & { id?: string }): Result {
       next = { ...r, seq: { ...r.seq, adj: r.seq.adj + 1 } };
     }
     commit(next);
+    sync("sk_save_product", { p: { ...p, id } });
   }
   return { ok: true };
 }
@@ -259,11 +264,14 @@ export function deleteProduct(id: string): Result {
   const why = productLinked(s, id);
   if (why) return { ok: false, error: `No se puede eliminar: ${why}. Puedes desactivarlo.` };
   commit({ ...s, products: s.products.filter((p) => p.id !== id) });
+  sync("sk_delete_product", { p_id: id });
   return { ok: true };
 }
 export function toggleProduct(id: string) {
   const s = cur();
+  const cur0 = s.products.find((p) => p.id === id);
   commit({ ...s, products: s.products.map((p) => (p.id === id ? { ...p, active: !p.active } : p)) });
+  if (cur0) sync("sk_set_product_active", { p_id: id, p_active: !cur0.active });
 }
 export function manualAdjust(productId: string, type: MoveType, qty: number, reason: string): Result {
   const s = cur();
@@ -277,6 +285,7 @@ export function manualAdjust(productId: string, type: MoveType, qty: number, rea
   const r = applyDeltas(s, [{ productId, qty: delta }], { type, reason, refType: "ajuste", refCode: code, date: new Date().toISOString() });
   if (typeof r === "string") return { ok: false, error: r };
   commit({ ...r, seq: { ...r.seq, adj: r.seq.adj + 1 } });
+  sync("sk_adjust", { p_product: productId, p_type: type, p_qty: qty, p_reason: reason });
   return { ok: true };
 }
 
@@ -296,14 +305,17 @@ export function saveRecipe(r: Omit<Recipe, "id"> & { id?: string }): Result {
   }
   if (s.recipes.some((x) => x.productId === r.productId && x.id !== r.id))
     return { ok: false, error: "Ese producto ya tiene una receta" };
-  if (r.id) commit({ ...s, recipes: s.recipes.map((x) => (x.id === r.id ? (r as Recipe) : x)) });
-  else commit({ ...s, recipes: [...s.recipes, { ...r, id: uid() }] });
+  const rec = { ...r, id: r.id ?? uid() } as Recipe;
+  if (r.id) commit({ ...s, recipes: s.recipes.map((x) => (x.id === r.id ? rec : x)) });
+  else commit({ ...s, recipes: [...s.recipes, rec] });
+  sync("sk_save_recipe", { r: rec });
   return { ok: true };
 }
 export function deleteRecipe(id: string): Result {
   const s = cur();
   if (s.orders.some((o) => o.recipeId === id)) return { ok: false, error: "La receta tiene órdenes de producción asociadas" };
   commit({ ...s, recipes: s.recipes.filter((r) => r.id !== id) });
+  sync("sk_delete_recipe", { p_id: id });
   return { ok: true };
 }
 
@@ -315,9 +327,12 @@ export function saveOrder(o: { id?: string; recipeId: string; qty: number; date:
     const prev = s.orders.find((x) => x.id === o.id)!;
     if (!["borrador", "pendiente"].includes(prev.status)) return { ok: false, error: "Solo se editan órdenes en borrador o pendientes" };
     commit({ ...s, orders: s.orders.map((x) => (x.id === o.id ? { ...x, ...o } as ProductionOrder : x)) });
+    sync("sk_save_order", { o });
   } else {
     const code = `OP-${String(s.seq.order + 1).padStart(4, "0")}`;
-    commit({ ...s, seq: { ...s.seq, order: s.seq.order + 1 }, orders: [{ id: uid(), code, ...o }, ...s.orders] });
+    const id = uid();
+    commit({ ...s, seq: { ...s.seq, order: s.seq.order + 1 }, orders: [{ id, code, ...o }, ...s.orders] });
+    sync("sk_save_order", { o: { ...o, id } });
   }
   return { ok: true };
 }
@@ -337,16 +352,18 @@ export function setOrderStatus(id: string, status: OrderStatus): Result {
       if (e) return { ok: false, error: e };
     }
     commit({ ...s, orders: s.orders.map((x) => (x.id === id ? { ...x, status } : x)) });
+    sync("sk_set_order_status", { p_id: id, p_status: status });
     return { ok: true };
   }
   if (status === "cancelada") {
     if (o.status === "en_produccion") return { ok: false, error: "Solo se cancelan borradores o pendientes" };
     commit({ ...s, orders: s.orders.map((x) => (x.id === id ? { ...x, status } : x)) });
+    sync("sk_set_order_status", { p_id: id, p_status: status });
     return { ok: true };
   }
   return completeOrder(id);
 }
-export function completeOrder(id: string, at?: string): Result {
+export function completeOrder(id: string): Result {
   const s = cur();
   const o = s.orders.find((x) => x.id === id);
   if (!o) return { ok: false, error: "Orden no encontrada" };
@@ -356,7 +373,7 @@ export function completeOrder(id: string, at?: string): Result {
   if (e) return { ok: false, error: e };
   const recipe = s.recipes.find((r) => r.id === o.recipeId)!;
   const reqs = requirements(s, o.recipeId, o.qty);
-  const date = at ?? new Date().toISOString();
+  const date = new Date().toISOString();
   const r1 = applyDeltas(s, reqs.map((r) => ({ productId: r.productId, qty: -r.need })), {
     reason: `Consumo producción ${o.code}`, refType: "produccion", refId: o.id, refCode: o.code, date,
   });
@@ -369,6 +386,7 @@ export function completeOrder(id: string, at?: string): Result {
     ...r2,
     orders: r2.orders.map((x) => x.id === id ? { ...x, status: "completada", consumed: reqs.map((r) => ({ productId: r.productId, qty: r.need })), produced: o.qty, completedAt: date } : x),
   });
+  sync("sk_complete_order", { p_id: id });
   return { ok: true };
 }
 export function deleteOrder(id: string): Result {
@@ -376,6 +394,7 @@ export function deleteOrder(id: string): Result {
   const o = s.orders.find((x) => x.id === id);
   if (!o || o.status !== "borrador") return { ok: false, error: "Solo se eliminan órdenes en borrador" };
   commit({ ...s, orders: s.orders.filter((x) => x.id !== id) });
+  sync("sk_delete_order", { p_id: id });
   return { ok: true };
 }
 export function orderCost(s: State, o: ProductionOrder) {
@@ -424,6 +443,7 @@ export function saveSale(x: { items: SaleItem[]; method: PayMethod; date: string
   }
   const exists = base.sales.some((v) => v.id === id);
   commit({ ...base, sales: exists ? base.sales.map((v) => (v.id === id ? sale : v)) : [sale, ...base.sales] });
+  sync("sk_save_sale", { s: { id, date: x.date, method: x.method, items }, p_confirm: x.confirm });
   return { ok: true };
 }
 export function voidSale(id: string): Result {
@@ -436,6 +456,7 @@ export function voidSale(id: string): Result {
   });
   if (typeof r === "string") return { ok: false, error: r };
   commit({ ...r, sales: r.sales.map((v) => (v.id === id ? { ...v, status: "anulada" } : v)) });
+  sync("sk_void_sale", { p_id: id });
   return { ok: true };
 }
 export function deleteSale(id: string): Result {
@@ -443,6 +464,7 @@ export function deleteSale(id: string): Result {
   const v = s.sales.find((x) => x.id === id);
   if (!v || v.status !== "borrador") return { ok: false, error: "Solo se eliminan ventas no confirmadas" };
   commit({ ...s, sales: s.sales.filter((x) => x.id !== id) });
+  sync("sk_delete_sale", { p_id: id });
   return { ok: true };
 }
 
@@ -455,70 +477,3 @@ export function fmtQty(n: number, unit: BaseUnit | Unit) {
 export const fmtDate = (d: string) => new Date(d).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
 export const fmtDateTime = (d: string) => new Date(d).toLocaleString("es-CO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
-// ---------- Seed ----------
-function buildSeed(): State {
-  const P = (id: string, name: string, sku: string, category: Category, unit: BaseUnit, min: number, cost: number, price?: number): Product => ({ id, name, sku, category, unit, stock: 0, min, cost, price, active: true });
-  const products = [
-    P("harina", "Harina de trigo", "MP-001", "materia", "kg", 5, 4000),
-    P("queso", "Queso mozzarella", "MP-002", "materia", "kg", 3, 28000),
-    P("tomate", "Salsa de tomate", "MP-003", "materia", "kg", 2, 9000),
-    P("pepperoni", "Pepperoni", "MP-004", "materia", "kg", 1, 32000),
-    P("champ", "Champiñones", "MP-005", "materia", "kg", 1, 14000),
-    P("aceite", "Aceite de oliva", "MP-006", "materia", "l", 0.5, 25000),
-    P("masa", "Masa de pizza", "PR-001", "preparacion", "und", 6, 1000),
-    P("salsa", "Salsa preparada", "PR-002", "preparacion", "kg", 2, 9500),
-    P("margarita", "Pizza Margarita", "PV-001", "venta", "und", 0, 0, 24000),
-    P("pizzapep", "Pizza Pepperoni", "PV-002", "venta", "und", 0, 0, 32000),
-    P("vegetariana", "Pizza Vegetariana", "PV-003", "venta", "und", 0, 0, 29000),
-  ];
-  const recipes: Recipe[] = [
-    { id: "r-masa", name: "Masa de pizza", productId: "masa", yield: 4, ingredients: [{ productId: "harina", qty: 1, unit: "kg" }, { productId: "aceite", qty: 20, unit: "ml" }] },
-    { id: "r-salsa", name: "Salsa preparada", productId: "salsa", yield: 1, ingredients: [{ productId: "tomate", qty: 1, unit: "kg" }, { productId: "aceite", qty: 20, unit: "ml" }] },
-    { id: "r-marg", name: "Pizza Margarita", productId: "margarita", yield: 1, ingredients: [{ productId: "masa", qty: 1, unit: "und" }, { productId: "queso", qty: 150, unit: "g" }, { productId: "salsa", qty: 100, unit: "g" }] },
-    { id: "r-pep", name: "Pizza Pepperoni", productId: "pizzapep", yield: 1, ingredients: [{ productId: "masa", qty: 1, unit: "und" }, { productId: "queso", qty: 150, unit: "g" }, { productId: "salsa", qty: 100, unit: "g" }, { productId: "pepperoni", qty: 50, unit: "g" }] },
-    { id: "r-veg", name: "Pizza Vegetariana", productId: "vegetariana", yield: 1, ingredients: [{ productId: "masa", qty: 1, unit: "und" }, { productId: "queso", qty: 150, unit: "g" }, { productId: "salsa", qty: 100, unit: "g" }, { productId: "champ", qty: 80, unit: "g" }] },
-  ];
-  const now = Date.now();
-  const day = 86400000;
-  const at = (daysAgo: number, h: number) => { const d = new Date(now - daysAgo * day); d.setHours(h, 0, 0, 0); return d.toISOString(); };
-  let s: State = { products, recipes, orders: [], sales: [], movements: [], seq: { order: 0, sale: 0, adj: 0 } };
-  // Initial stock (the opening balance requested), 8 days ago
-  const initial: Record<string, number> = { harina: 30, queso: 16, tomate: 10, pepperoni: 4.8, champ: 1.3, aceite: 0.66, masa: 6, salsa: 2 };
-  const r0 = applyDeltas(s, Object.entries(initial).map(([productId, qty]) => ({ productId, qty })), { type: "entrada", reason: "Inventario inicial", refType: "ajuste", refCode: "AJ-0001", date: at(8, 8) });
-  s = { ...(r0 as State), seq: { order: 0, sale: 0, adj: 1 } };
-  state = s;
-  const mkOrder = (recipeId: string, qty: number, d: number, status: OrderStatus) => {
-    saveOrder({ recipeId, qty, date: at(d, 9), status: "pendiente" });
-    const o = state!.orders[0]!;
-    if (status === "completada") completeOrder(o.id, at(d, 10));
-    else state = { ...state!, orders: state!.orders.map((x) => (x.id === o.id ? { ...x, status } : x)) };
-  };
-  const listeners0 = [...listeners];
-  listeners.clear();
-  mkOrder("r-masa", 20, 7, "completada");
-  mkOrder("r-salsa", 4, 7, "completada");
-  const plan: [number, [string, number][], PayMethod][] = [
-    [6, [["margarita", 2], ["pizzapep", 1]], "Efectivo"],
-    [6, [["vegetariana", 1]], "Tarjeta"],
-    [5, [["pizzapep", 2]], "Transferencia"],
-    [5, [["margarita", 1], ["vegetariana", 1]], "Tarjeta"],
-    [4, [["margarita", 3]], "Efectivo"],
-    [3, [["pizzapep", 1], ["vegetariana", 1]], "Tarjeta"],
-    [3, [["margarita", 1]], "Efectivo"],
-    [2, [["pizzapep", 2], ["margarita", 1]], "Transferencia"],
-    [1, [["vegetariana", 2]], "Tarjeta"],
-    [1, [["margarita", 1], ["pizzapep", 1]], "Efectivo"],
-    [0, [["pizzapep", 1], ["margarita", 1]], "Tarjeta"],
-  ];
-  mkOrder("r-masa", 8, 3, "completada");
-  for (const [d, items, method] of plan) {
-    saveSale({ date: at(d, 19), method, confirm: true, items: items.map(([pid, qty]) => { const p = state!.products.find((x) => x.id === pid)!; return { productId: pid, name: p.name, qty, price: p.price! }; }) });
-  }
-  mkOrder("r-salsa", 3, 0, "pendiente");
-  mkOrder("r-masa", 12, 0, "borrador");
-  saveSale({ date: at(0, 20), method: "Efectivo", confirm: false, items: [{ productId: "vegetariana", name: "Pizza Vegetariana", qty: 1, price: 29000 }] });
-  listeners0.forEach((l) => listeners.add(l));
-  const out = state!;
-  state = null;
-  return out;
-}
