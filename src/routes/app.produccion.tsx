@@ -9,6 +9,7 @@ import { PageHeader, Panel, DataTable, SidePanel, FormFooter, Confirm, Field, Se
 import { OrderBadge, ORDER_LABEL } from "@/components/badges";
 
 export const Route = createFileRoute("/app/produccion")({
+  validateSearch: (s: Record<string, unknown>): { ia?: boolean } => (s.ia === true || s.ia === "1" || s.ia === 1 ? { ia: true } : {}),
   head: () => ({ meta: [{ title: "Producción — Synthex Kitchen" }, { name: "description", content: "Órdenes de producción de masas y salsas." }, { property: "og:title", content: "Producción — Synthex Kitchen" }, { property: "og:description", content: "Transforma materias primas en preparaciones." }] }),
   component: Produccion,
 });
@@ -18,6 +19,10 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 function Produccion() {
   const s = useStore()!;
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const [ai, setAi] = useState(!!search.ia);
+  const closeAi = () => { setAi(false); if (search.ia) void navigate({ search: {}, replace: true }); };
   const [edit, setEdit] = useState<Draft | null>(null);
   const [view, setView] = useState<string | null>(null);
   const [act, setAct] = useState<{ o: ProductionOrder; to: OrderStatus | "delete" } | null>(null);
