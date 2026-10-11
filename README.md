@@ -147,7 +147,7 @@ flowchart TD
 | Módulo | Qué permite |
 | --- | --- |
 | **Login** | Pantalla de ingreso visual. No valida credenciales. |
-| **Dashboard** | KPIs, gráfico de ventas de los últimos 7 días, inventario por categoría, alertas de reposición, movimientos recientes y acceso al asistente de IA. |
+| **Dashboard** | KPIs, gráfico de ventas de los últimos 7 días, inventario por categoría, alertas de reposición y acceso al asistente de IA. |
 | **Inventario** | Crear, consultar, editar, desactivar y eliminar productos. Filtros por categoría, estado y nivel de stock. Búsqueda por nombre o SKU. Historial de movimientos por producto. |
 | **Recetas** | Definir ingredientes, cantidades (con unidades g/kg, ml/l, und), rendimiento y costo. Consultar si hay material suficiente para producir una cantidad y cuánto falta. |
 | **Producción** | Crear órdenes, ver el desglose de insumos requeridos vs. disponibles, iniciar, completar o cancelar. Detalle con insumos consumidos y resultado producido. Incluye el **Asistente de producción IA** (ver sección 9). |
