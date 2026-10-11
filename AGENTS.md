@@ -15,3 +15,4 @@
 - All writes go through `sk_*` security-definer functions (tables are read-only to clients) so stock checks and status transitions run atomically in one transaction.
 - Inventory deductions are guarded by atomic status updates plus a unique index on movements (ref_type, ref_id, product_id) — prevents double deductions from repeated clicks or tabs.
 - Demo data is rebuilt by `sk_reset_demo()`, which replays operations through the same business functions.
+- AI features call Lovable AI Gateway only from server functions (src/lib/*.functions.ts + *.server.ts); AI output is advisory and always re-validated client-side with store rules before any action — keeps keys server-side and business rules authoritative.
