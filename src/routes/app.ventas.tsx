@@ -8,7 +8,7 @@ import { PageHeader, Panel, DataTable, SidePanel, Confirm, Field, Select, notify
 import { SaleBadge } from "@/components/badges";
 
 export const Route = createFileRoute("/app/ventas")({
-  head: () => ({ meta: [{ title: "Ventas — PizzaFlow" }, { name: "description", content: "Registro de ventas de pizzas con descuento automático de insumos." }, { property: "og:title", content: "Ventas — PizzaFlow" }, { property: "og:description", content: "Ventas de Forno Pizza." }] }),
+  head: () => ({ meta: [{ title: "Ventas — Synthex Kitchen" }, { name: "description", content: "Registro de ventas de pizzas con descuento automático de insumos." }, { property: "og:title", content: "Ventas — Synthex Kitchen" }, { property: "og:description", content: "Ventas de Forno Pizza." }] }),
   component: Ventas,
 });
 

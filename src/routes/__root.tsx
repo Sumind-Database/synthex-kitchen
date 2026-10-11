@@ -79,9 +79,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PizzaFlow" },
+      { title: "Synthex Kitchen" },
       { name: "description", content: "Gestión de inventario, recetas, producción y ventas para pizzerías." },
-      { property: "og:title", content: "PizzaFlow" },
+      { property: "og:title", content: "Synthex Kitchen" },
       { property: "og:description", content: "Gestión de inventario, recetas, producción y ventas para pizzerías." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

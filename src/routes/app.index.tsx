@@ -7,7 +7,7 @@ import { MoveBadge, StockBadge } from "@/components/badges";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/app/")({
-  head: () => ({ meta: [{ title: "Dashboard — PizzaFlow" }, { name: "description", content: "Indicadores de inventario, producción y ventas de Forno Pizza." }, { property: "og:title", content: "Dashboard — PizzaFlow" }, { property: "og:description", content: "Indicadores en tiempo real de la pizzería." }] }),
+  head: () => ({ meta: [{ title: "Dashboard — Synthex Kitchen" }, { name: "description", content: "Indicadores de inventario, producción y ventas de Forno Pizza." }, { property: "og:title", content: "Dashboard — Synthex Kitchen" }, { property: "og:description", content: "Indicadores en tiempo real de la pizzería." }] }),
   component: Dashboard,
 });
 

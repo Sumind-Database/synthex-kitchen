@@ -11,7 +11,7 @@ import { PageHeader, Panel, DataTable, SidePanel, FormFooter, Confirm, Field, Se
 import { StockBadge, MoveBadge } from "@/components/badges";
 
 export const Route = createFileRoute("/app/inventario")({
-  head: () => ({ meta: [{ title: "Inventario — PizzaFlow" }, { name: "description", content: "Productos, existencias y estados de stock." }, { property: "og:title", content: "Inventario — PizzaFlow" }, { property: "og:description", content: "Control de existencias de la pizzería." }] }),
+  head: () => ({ meta: [{ title: "Inventario — Synthex Kitchen" }, { name: "description", content: "Productos, existencias y estados de stock." }, { property: "og:title", content: "Inventario — Synthex Kitchen" }, { property: "og:description", content: "Control de existencias de la pizzería." }] }),
   component: Inventario,
 });
 

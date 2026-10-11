@@ -7,7 +7,7 @@ import { useStore, saveRecipe, deleteRecipe, recipeCost, requirements, unitsFor,
 import { PageHeader, Panel, DataTable, SidePanel, FormFooter, Confirm, Field, Select, Tag, notify } from "@/components/kit";
 
 export const Route = createFileRoute("/app/recetas")({
-  head: () => ({ meta: [{ title: "Recetas — PizzaFlow" }, { name: "description", content: "Recetas, ingredientes y costos de preparaciones y pizzas." }, { property: "og:title", content: "Recetas — PizzaFlow" }, { property: "og:description", content: "Costeo de recetas de la pizzería." }] }),
+  head: () => ({ meta: [{ title: "Recetas — Synthex Kitchen" }, { name: "description", content: "Recetas, ingredientes y costos de preparaciones y pizzas." }, { property: "og:title", content: "Recetas — Synthex Kitchen" }, { property: "og:description", content: "Costeo de recetas de la pizzería." }] }),
   component: Recetas,
 });
 

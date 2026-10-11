@@ -8,7 +8,7 @@ import { PageHeader, Panel, DataTable, SidePanel, FormFooter, Confirm, Field, Se
 import { MoveBadge } from "@/components/badges";
 
 export const Route = createFileRoute("/app/movimientos")({
-  head: () => ({ meta: [{ title: "Movimientos — PizzaFlow" }, { name: "description", content: "Libro de movimientos de inventario con trazabilidad." }, { property: "og:title", content: "Movimientos — PizzaFlow" }, { property: "og:description", content: "Entradas, salidas y ajustes de inventario." }] }),
+  head: () => ({ meta: [{ title: "Movimientos — Synthex Kitchen" }, { name: "description", content: "Libro de movimientos de inventario con trazabilidad." }, { property: "og:title", content: "Movimientos — Synthex Kitchen" }, { property: "og:description", content: "Entradas, salidas y ajustes de inventario." }] }),
   component: Movimientos,
 });
 
