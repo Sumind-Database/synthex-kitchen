@@ -18,7 +18,7 @@ export function createLovableAiGatewayRunIdFetch(initialRunId?: string) {
 }
 
 export function createGatewayProvider() {
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const apiKey = process.env['LOVABLE_API_KEY'];
   if (!apiKey) throw new Error("La IA no está configurada (falta LOVABLE_API_KEY).");
   const runIdFetch = createLovableAiGatewayRunIdFetch();
   return createOpenAI({

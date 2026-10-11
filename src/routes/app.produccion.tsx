@@ -10,7 +10,7 @@ import { PageHeader, Panel, DataTable, SidePanel, FormFooter, Confirm, Field, Se
 import { OrderBadge, ORDER_LABEL } from "@/components/badges";
 
 export const Route = createFileRoute("/app/produccion")({
-  validateSearch: (s: Record<string, unknown>): { ia?: boolean } => (s.ia === true || s.ia === "1" || s.ia === 1 ? { ia: true } : {}),
+  validateSearch: (s: Record<string, unknown>): { ia?: boolean } => (s["ia"] === true || s["ia"] === "1" || s["ia"] === 1 ? { ia: true } : {}),
   head: () => ({ meta: [{ title: "Producción — Synthex Kitchen" }, { name: "description", content: "Órdenes de producción de masas y salsas." }, { property: "og:title", content: "Producción — Synthex Kitchen" }, { property: "og:description", content: "Transforma materias primas en preparaciones." }] }),
   component: Produccion,
 });
